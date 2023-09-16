@@ -2310,16 +2310,12 @@ func (c *Client) GetTopLevelBappid(cmdbci, env string) (string, error) {
 		fmt.Println("newCmdbCi : " + newCmdbCi)
 	}
 
-	// search the exact BAPPID can be used and fields in sysparm_fields are not empty
-	// TO-DO : need to add API to search bappid from sid.disney.com
 	bappid := ""
 	respMap, _ := c.SnowTable("GET", "cmdb_ci_business_app", map[string]string{"u_display_name": newCmdbCi}, nil)
 	if c.debug {
 		fmt.Println(respMap)
 	}
 	for _, resp := range respMap {
-		// Typically BAPPID in SID.disney.com has below keys not EMPTY
-		// BAPPID in your ChangeRequest YAML SHOULD start from BAPPID in SID
 		if resp.(map[string]interface{})["cost_center"] == "" ||
 			resp.(map[string]interface{})["owned_by"] == "" ||
 			resp.(map[string]interface{})["u_executive_owner"] == "" ||
@@ -2332,36 +2328,6 @@ func (c *Client) GetTopLevelBappid(cmdbci, env string) (string, error) {
 
 	return bappid, nil
 
-}
-
-func (c *Client) SendLog(debug, dryrun bool, version, myos, snowinstance, vaultinstance, githubinstance, vaulttoken, githubtoken, egithubinstance, evaultinstance, esnowinstance, esnowusername, esnowpassword, arglist string) {
-	// This is for snow cli statictics
-	hostname, _ := os.Hostname()
-	formData := url.Values{
-		"uid":             {c.currentUser},
-		"debug":           {strconv.FormatBool(debug)},
-		"dryrun":          {strconv.FormatBool(dryrun)},
-		"hostname":        {hostname},
-		"version":         {version},
-		"os":              {myos},
-		"snowinstance":    {snowinstance},
-		"vaultinstance":   {vaultinstance},
-		"githubinstance":  {githubinstance},
-		"vaulttoken":      {vaulttoken},
-		"githubtoken":     {githubtoken},
-		"egithubinstance": {egithubinstance},
-		"evaultinstance":  {evaultinstance},
-		"esnowinstance":   {esnowinstance},
-		"esnowusername":   {esnowusername},
-		"esnowpassword":   {esnowpassword},
-		"arglist":         {arglist},
-	}
-
-	// don't care if this is successful or not
-	_, err := http.PostForm("http://mon01.disid.disney.com/snow_stat.php", formData)
-	if err != nil && c.debug {
-		fmt.Printf("%v\n\n", err)
-	}
 }
 
 var arrChgCreateList = []string{
