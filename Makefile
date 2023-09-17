@@ -74,10 +74,6 @@ build_windows:
 	@echo "  >  Creating GitHub binary for Windows amd64..."
 	GOOS=windows $(GOENV_flags_jenkins) $(cmd_go_build_windows)
 
-$(cmd_create_release)
-$(cmd_attach_linux_to_release)
-$(cmd_attach_darwin_to_release)
-
 # For workstation only
 ws: clean
 	$(cmd_godep) && $(cmd_test) && $(cmd_cover_func)

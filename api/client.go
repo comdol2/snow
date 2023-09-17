@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -185,15 +184,4 @@ func GetJson(body []byte) (jsonSource interface{}) {
 		}
 	}
 	return
-}
-
-func ReturnResponseBody(httpResponse *http.Response) (response []byte) {
-	if httpResponse.ContentLength != 0 {
-		contents, err := ioutil.ReadAll(httpResponse.Body)
-		if err != nil {
-			log.Fatal("%s", err)
-		}
-		return contents
-	}
-	return []byte("")
 }
