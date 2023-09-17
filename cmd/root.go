@@ -20,7 +20,7 @@ var RootCmd = &cobra.Command{
 	Use:     "snow",
 	Version: version,
 	Short:   "test code",
-	Long:    `this is a test code`,
+	Long:    `This is a test code for Sam's learning`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},
