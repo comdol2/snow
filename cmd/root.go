@@ -62,7 +62,6 @@ func initConfig() {
 		fmt.Println("My OS : ", strMyOS)
 	}
 
-	eVAULT_INSTANCE = os.Getenv("VAULT_INSTANCE")
 	eSNOW_INSTANCE = os.Getenv("SNOW_INSTANCE")
 
 	eSNOW_USERNAME = os.Getenv("SNOW_USERNAME")

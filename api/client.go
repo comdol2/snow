@@ -1,17 +1,15 @@
 package api
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
-
-	"encoding/json"
-	"io/ioutil"
-
-	"crypto/tls"
-	"net/http"
 )
 
 const (
@@ -58,15 +56,15 @@ func NewClient(snowUsername, snowPassword, snowInstance string, debug bool) *Cli
 
 }
 
-func (c *Client) API(method string, apiHeader map[string][]string, snowApiEndPoint string, params url.Values, apiBody io.Reader) (httpResp interface{}, httpCode int, err error) {
+func (c *Client) API(method string, apiHeader map[string][]string, snowApiEndPoint string, snowApiParams url.Values, apiBody io.Reader) (apiresp interface{}, apirespcode int, apierr error) {
 
 	if c.debug {
-		fmt.Println("\nAPI(", method, ",", apiHeader, ",", snowApiEndPoint, ", ", params, ", ", apiBody, ")")
+		fmt.Println("\nAPI(", method, ",", apiHeader, ",", snowApiEndPoint, ", ", snowApiParams, ", ", apiBody, ")")
 	}
 
 	apiURL := c.snowInstance + tblApiVersion + snowApiEndPoint
-	if params != nil {
-		apiURL = apiURL + "?" + params.Encode()
+	if snowApiParams != nil {
+		apiURL = apiURL + "?" + snowApiParams.Encode()
 	}
 	if apiHeader == nil {
 		apiHeader = url.Values{}
@@ -91,8 +89,7 @@ func (c *Client) API(method string, apiHeader map[string][]string, snowApiEndPoi
 
 	httpReq, httpReqErr := http.NewRequest(apiMethod, apiURL, apiBody)
 	if httpReqErr != nil {
-		fmt.Println("Failed to create http.Request object")
-		return nil, 0, httpReqErr
+		log.Fatal("HTTP request creation error:", httpReqErr)
 	}
 	if c.debug {
 		fmt.Println("Request URL: " + apiURL)
@@ -104,26 +101,21 @@ func (c *Client) API(method string, apiHeader map[string][]string, snowApiEndPoi
 		fmt.Println(httpReq.URL)
 	}
 
+	statusCode := 0
 	httpResp, httpRespErr := c.client.Do(httpReq)
 	if httpRespErr != nil {
-
-		log.Fatal(httpRespErr)
-
+		log.Fatal("HTTP request error:", httpRespErr)
 	} else {
+		defer httpResp.Body.Close()
 
-		jsonResp := GetJson(httpResp.Body)
-		if err != nil {
-			return nil, httpResp.StatusCode, err
+		// Access the HTTP status code
+		statusCode := httpResp.StatusCode
+
+		if statusCode == 200 || statusCode == 201 {
+			return httpResp, statusCode, nil
 		}
-
-		if httpResp.StatusCode == 200 || httpResp.StatusCode == 201 {
-			return jsonResp, httpResp.StatusCode, nil
-		}
-
 	}
-
-	return nil, httpResp.StatusCode, httpRespErr
-
+	return nil, statusCode, httpRespErr
 }
 
 // api/client.go:114:32: httpResp.Body undefined (type interface{} has no field or method Body)
