@@ -1,16 +1,12 @@
 package api
 
 import (
-	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/url"
-	"os"
 	"strings"
-	"time"
 
-	"github.com/rhysd/abspath"
 	"encoding/json"
 	"io/ioutil"
 
@@ -19,12 +15,12 @@ import (
 )
 
 const (
-	tblApiVersion        		= "/api/now/"
+	tblApiVersion = "/api/now/"
 )
 
 // Client structure
 type Client struct {
-	httpClient := &http.Client{}
+	client *http.Client
 
 	snowInstance string
 	snowUsername string
@@ -50,11 +46,10 @@ func NewClient(snowUsername, snowPassword, snowInstance string, debug bool) *Cli
 		c.snowUsername = snowUsername
 		c.snowPassword = snowPassword
 
-		tr  := &http.Transport{
-			TLSClientConfig := &tls.Config(InsecureSkipVerify: true),
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
-		c.httpClient := http.Client{Transport: tr}
-
+		c.client = &http.Client{Transport: transport}
 		c.debug = debug
 
 	}
@@ -94,29 +89,31 @@ func (c *Client) API(method string, apiHeader map[string][]string, snowApiEndPoi
 		fmt.Println("======================================================================================")
 	}
 
-        httpReq, httpReqErr := http.NewRequest(apiMethod, apiURL, apiBody)
+	httpReq, httpReqErr := http.NewRequest(apiMethod, apiURL, apiBody)
 	if httpReqErr != nil {
 		fmt.Println("Failed to create http.Request object")
-		return jsonResp, httpReq.StatusCode, errors.New(string(apiResponse))
+		return nil, 0, httpReqErr
 	}
 	if c.debug {
 		fmt.Println("Request URL: " + apiURL)
-	}	
-	
+	}
+
 	httpReq.SetBasicAuth(c.snowUsername, c.snowPassword)
 	if c.debug {
 		fmt.Println(apiHeader)
 		fmt.Println(httpReq.URL)
-	}	
+	}
 
 	httpResp, httpRespErr := c.client.Do(httpReq)
 	if httpRespErr != nil {
-		fmt.Printf("Error(httpRespCode:%d) making %s request: %v\n", httpResp.StatusCode, apiMethod, httpRespErr)
+
+		log.Fatal(httpRespErr)
+
 	} else {
 
-		jsonResp, err := utils.GetJson(httpResp)
+		jsonResp := GetJson(httpResp.Body)
 		if err != nil {
-			return jsonResp, httpResp.StatusCode, err
+			return nil, httpResp.StatusCode, err
 		}
 
 		if httpResp.StatusCode == 200 || httpResp.StatusCode == 201 {
@@ -125,11 +122,16 @@ func (c *Client) API(method string, apiHeader map[string][]string, snowApiEndPoi
 
 	}
 
-	return nil, httpResp.StatusCode, errors.New(string(apiResponse))
+	return nil, httpResp.StatusCode, httpRespErr
 
 }
 
-// snowTable - Gets the request based on method for accessiong SNOW Table API
+// api/client.go:114:32: httpResp.Body undefined (type interface{} has no field or method Body)
+// api/client.go:116:25: httpResp.StatusCode undefined (type interface{} has no field or method StatusCode)
+// api/client.go:119:15: httpResp.StatusCode undefined (type interface{} has no field or method StatusCode)
+// api/client.go:120:30: httpResp.StatusCode undefined (type interface{} has no field or method StatusCode)
+// api/client.go:125:23: httpResp.StatusCode undefined (type interface{} has no field or method StatusCode)
+
 func (c *Client) snowTable(method string, sTable string, qParams map[string]string, pParams io.Reader) ([]interface{}, error) {
 
 	if c.debug {
@@ -181,4 +183,25 @@ func (c *Client) snowTable(method string, sTable string, qParams map[string]stri
 
 	return sResponse, nil
 
+}
+
+func GetJson(body []byte) (jsonSource interface{}) {
+	if string(body) != "" && body != nil {
+		err := json.Unmarshal(body, &jsonSource)
+		if err != nil {
+			log.Print("template executing error: ", err)
+		}
+	}
+	return
+}
+
+func ReturnResponseBody(httpResponse *http.Response) (response []byte) {
+	if httpResponse.ContentLength != 0 {
+		contents, err := ioutil.ReadAll(httpResponse.Body)
+		if err != nil {
+			log.Fatal("%s", err)
+		}
+		return contents
+	}
+	return []byte("")
 }

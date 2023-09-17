@@ -2,19 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
-	"strings"
-	"time"
 
-	yaml "gopkg.in/yaml.v3"
-
-	"github.com/rhysd/abspath"
-	"github.com/spf13/cobra"
 	snow "github.com/comdol2/snow/api"
+	"github.com/spf13/cobra"
 )
 
 var version string
@@ -37,7 +30,7 @@ var RootCmd = &cobra.Command{
 	Use:     "snow",
 	Version: version,
 	Short:   "test code",
-	Long: 	 `this is a test code`,
+	Long:    `this is a test code`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},

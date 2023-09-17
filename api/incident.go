@@ -4,19 +4,14 @@ import (
 	"fmt"
         "strings"
 	"errors"
-	"io/ioutil"
-	"gopkg.in/yaml.v3"
-	"log"
 	"strconv"
-        "path/filepath"
 
-	"github.com/rhysd/abspath"
 )
 
 func (c *Client) GetIncident(incidentnumber, sys_id, sysparamfields string) (interface{}, string, error) {
 
         if c.debug {
-                fmt.Println("\nGetIncident(" + incidentnumber + ", " + sys_id + ", " + sysparamfields + ", " + strconv.FormatBool(inraw) + ")")
+                fmt.Println("\nGetIncident(" + incidentnumber + ", " + sys_id + ", " + sysparamfields + ")")
         }
 
         if strings.HasPrefix(strings.ToUpper(incidentnumber), "INC") {
@@ -55,12 +50,10 @@ func (c *Client) GetIncident(incidentnumber, sys_id, sysparamfields string) (int
                 openedby := ""
                 if resp.(map[string]interface{})["opened_by"] != "" {
                         openedby = resp.(map[string]interface{})["opened_by"].(map[string]interface{})["value"].(string)
-                        _, openedby, _, _ = c.GetSysUser(openedby, "")
                 }
 
 		opened_at := ""
 		if resp.(map[string]interface{})["opened_at"] != "" {
-			opened_at, _ = c.ConvertUTCToLocal(resp.(map[string]interface{})["opened_at"].(string))
 		}
                 strResp = strResp + "\nOpened At          : " + opened_at
 
@@ -70,7 +63,6 @@ func (c *Client) GetIncident(incidentnumber, sys_id, sysparamfields string) (int
                 cmdbci := ""
                 if resp.(map[string]interface{})["cmdb_ci"] != "" {
                         cmdbci = resp.(map[string]interface{})["cmdb_ci"].(map[string]interface{})["value"].(string)
-                        _, cmdbci, _, _ = c.GetCmdbCi(cmdbci)
                 }
                 strResp = strResp + "\nConfiguration Item : " + cmdbci
                 strResp = strResp + "\nCategory           : " + resp.(map[string]interface{})["category"].(string)
@@ -78,13 +70,11 @@ func (c *Client) GetIncident(incidentnumber, sys_id, sysparamfields string) (int
                 assignmentgroup := ""
                 if resp.(map[string]interface{})["assignment_group"] != "" {
                         assignmentgroup = resp.(map[string]interface{})["assignment_group"].(map[string]interface{})["value"].(string)
-                        _, assignmentgroup, _ = c.GetSysUserGroup(assignmentgroup, "")
                 }
                 strResp = strResp + "\nAssignment Group   : " + assignmentgroup
                 assignedto := ""
                 if resp.(map[string]interface{})["assigned_to"] != "" {
                         assignedto = resp.(map[string]interface{})["assigned_to"].(map[string]interface{})["value"].(string)
-                        _, assignedto, _, _ = c.GetSysUser(assignedto, "")
                 }
                 strResp = strResp + "\nAssigned To        : " + assignedto
 		str_impact := ""
@@ -112,12 +102,10 @@ func (c *Client) GetIncident(incidentnumber, sys_id, sysparamfields string) (int
                 closedby := ""
                 if resp.(map[string]interface{})["closed_by"] != "" {
                         closedby = resp.(map[string]interface{})["closed_by"].(map[string]interface{})["value"].(string)
-                        _, closedby, _, _ = c.GetSysUser("", closedby)
                 }
 
 		closed_at := ""
 		if resp.(map[string]interface{})["closed_at"] != "" {
-			closed_at, _ = c.ConvertUTCToLocal(resp.(map[string]interface{})["closed_at"].(string))
 		}
                 strResp = strResp + "\nClosed At          : " + closed_at
 
